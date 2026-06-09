@@ -1,0 +1,24 @@
+# Workspace-root cargo config.
+#
+# This file is intentionally empty of `[alias]` entries: cargo does not allow
+# user aliases to override built-in subcommands like `test`, `check`, or
+# `build` (you get "user-defined alias 'test' is ignored, because it is
+# shadowed by a built-in command" if you try).
+#
+# The `firmware` crate requires the Espressif `esp` toolchain (xtensa-esp32-
+# none-elf), which only activates when CWD is inside `firmware/`.  Running
+# `cargo test` from the workspace root uses the host's default toolchain
+# (stable Rust), which can't compile the firmware's esp-hal / esp-hub75
+# dependencies.
+#
+# Use the right command for the right job:
+#
+#   cargo test -p pong-wars-core        # game logic (host, 8 tests)
+#   cargo test -p pong-wars-sim         # simulator helpers (host, 3 tests)
+#   cargo test --workspace --exclude pong-wars-firmware
+#                                        # both of the above in one go
+#
+#   cd firmware && source ~/export-esp.sh && cargo run --release
+#                                        # build + flash + monitor the firmware
+#
+# A `make test` wrapper is provided in the workspace root for convenience.

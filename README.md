@@ -77,9 +77,26 @@ app, and open a serial monitor.
 
 ## Tests
 
+The workspace mixes two toolchains: `core` and `simulator` build on the host
+with stable Rust, while `firmware` needs the Espressif `esp` toolchain
+(Xtensa).  A plain `cargo test` from the workspace root tries to build the
+firmware with the host toolchain and fails — the firmware crate requires
+`#![feature(asm_experimental_arch)]` and the `esp32` chip-selector
+features that only exist on the Xtensa target.
+
+Use one of these instead:
+
 ```bash
-cargo test                          # all 11 tests (8 core + 3 sim)
-cargo test -p pong-wars-core        # game-logic tests only
+make test                                  # all 11 tests (8 core + 3 sim)
+cargo test --workspace --exclude pong-wars-firmware   # same thing, no make
+cargo test -p pong-wars-core               # game-logic tests only
+cargo test -p pong-wars-sim                # simulator helpers only
+```
+
+For the firmware, `cd firmware` first so the `esp` toolchain activates:
+
+```bash
+cd firmware && source ~/export-esp.sh && cargo run --release   # build + flash
 ```
 
 ## See also
