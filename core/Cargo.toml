@@ -1,0 +1,21 @@
+[package]
+name = "pong-wars-core"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Headless port of vnglst/pong-wars — fixed-grid simulation, no_std, suitable for LED matrices."
+
+[lib]
+name = "pong_wars_core"
+path = "src/lib.rs"
+
+[dependencies]
+# Pure, no_std PRNG (no global state, deterministic seed).
+oorandom = "11.1"
+# libm gives us sin/cos/abs/min/max without the std math intrinsics.
+libm = "0.2"
+
+[dev-dependencies]
+# host-side tests use a deterministic seed and check pure functions; no
+# extra deps required because oorandom + libm work the same with std.

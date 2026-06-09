@@ -1,0 +1,44 @@
+[package]
+name = "pong-wars-firmware"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "ESP32-S3 firmware that drives a 64x64 HUB75 LED matrix with the Pong Wars simulation."
+
+[[bin]]
+name = "pong-wars-led"
+path = "src/main.rs"
+
+[dependencies]
+pong-wars-core = { path = "../core" }
+
+# --- esp-hal ecosystem ----------------------------------------------------
+# Versions chosen to match the official esp-hub75 0.11 examples.  We avoid
+# embassy here because the blocking render loop in esp-hub75's
+# `hello_i2s_parallel.rs` (the original-ESP32 canonical example) is the
+# smallest path to a working panel.
+esp-hal               = { version = "1.1.1",   features = ["esp32", "unstable"] }
+esp-alloc             = { version = "0.10.0",  features = ["esp32"] }
+esp-backtrace         = { version = "0.19.0",  features = ["esp32", "panic-handler", "println"] }
+esp-println           = { version = "0.17.0", features = ["esp32"] }
+esp-bootloader-esp-idf = { version = "0.5.0",  features = ["esp32"] }
+
+# --- HUB75 driver ---------------------------------------------------------
+# `esp32` enables the I2S-parallel driver path; the chip does not have the
+# LCD_CAM peripheral that the S3 build uses.
+esp-hub75 = { version = "0.11.0", features = ["esp32"] }
+# `static_cell` is required by the `esp_hub75::hub75_dma_descriptors!` macro.
+static_cell = "2"
+
+# --- rendering primitives -------------------------------------------------
+embedded-graphics      = "0.8.2"
+embedded-hal           = "1.0.0"
+# Used only for `libm::floorf` / `libm::ceilf` on the ball rasteriser; the
+# core crate already depends on libm for its trig but doesn't re-export.
+libm                   = "0.2"
+
+[features]
+default = []
+# Pass --features defmt if you'd rather use RTT/defmt for diagnostics.
+defmt = ["esp-hal/defmt", "esp-hub75/defmt"]

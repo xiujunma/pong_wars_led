@@ -1,0 +1,12 @@
+/target
+/firmware/target
+/core/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# espflash dumps + IDE noise
+*.bin
+*.elf.bak
+.vscode/
+.idea/
+.DS_Store

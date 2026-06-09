@@ -1,0 +1,19 @@
+[build]
+target = "xtensa-esp32-none-elf"
+
+[target.xtensa-esp32-none-elf]
+runner = "espflash flash --monitor"
+rustflags = [
+    # esp-hal's `linkall.x` already pulls in `memory.x`, `alias.x`, `esp32.x`,
+    # and `hal-defaults.x` for the original ESP32.  We don't need the
+    # S3-only `rom_functions.x` here.
+    "-C", "link-arg=-Tlinkall.x",
+]
+
+[env]
+# The WROOM-32 has no PSRAM, so the default (no-PSRAM) path is correct.
+# No PSRAM-related config override needed in esp-hal 1.1.x.
+DEFMT_LOG = "info"
+
+[unstable]
+build-std = ["alloc", "core"]

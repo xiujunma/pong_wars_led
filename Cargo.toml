@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = ["core", "firmware", "simulator"]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+authors = ["maxj"]
+repository = "https://github.com/maxj/pong_wars_led"
+
+[workspace.lints.rust]
+# Allow dead_code in the core library because the embedded binary only
+# consumes part of the public API while host-side tests cover the rest.
+unsafe_code = "deny"
+
+# Release profile tuned for ESP32-S3 binary size.  esp-hal docs recommend
+# opt-level = 3 with LTO for size + speed parity with C/ESP-IDF.
+[profile.release]
+codegen-units = 1
+debug         = 2
+debug-assertions = false
+incremental   = false
+lto           = "fat"
+opt-level     = 3
+overflow-checks = false
+
+[profile.dev]
+debug = true
+opt-level = "s"
