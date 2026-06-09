@@ -4,15 +4,19 @@
 original, Xtensa LX6) driving a **64×64 HUB75 LED matrix**, written
 entirely in Rust.
 
+<p align="center">
+  <video src="docs/demo.mp4" autoplay loop muted playsinline width="480"></video>
+</p>
+
 Two balls — one "day", one "night" — bounce around a 32×32 logical grid,
 flipping cells to their own team's color whenever they touch an enemy cell
-and ricocheting off in the process.  The simulation is a faithful port of
-[`maxj/wasmhub-dev/pong_wars.rs`][wasm-port] (which itself ports the
+and ricocheting off in the process. The simulation is a faithful port of
+[`wasmhub-dev/pong_wars.rs`][wasm-port] (which itself ports the
 original HTML5 canvas demo), with arithmetic switched from `f64` to `f32`
 and the heap-allocated grid replaced by a stack-allocated fixed array so
 it fits comfortably in the chip's ~320 KB SRAM.
 
-[wasm-port]: https://github.com/maxj/wasmhub-dev/tree/main/pong_wars.rs
+[wasm-port]: https://github.com/wasmhub-dev/tree/main/pong_wars.rs
 
 ## Quick preview (no hardware)
 
@@ -21,8 +25,8 @@ cargo run --release -p pong-wars-sim
 ```
 
 Opens a 768×768 window showing the simulated 64×64 LED panel — each LED as
-a circular dot on a near-black background.  Space pauses, R resets,
-+/- changes speed, ESC quits.  Full controls in [`GUIDE.md`](GUIDE.md).
+a circular dot on a near-black background. Space pauses, R resets,
++/- changes speed, ESC quits. Full controls in [`GUIDE.md`](GUIDE.md).
 
 ## Layout
 
@@ -38,12 +42,12 @@ pong_wars_led/
 ## Hardware
 
 A bare **ESP32-DevKitC-1** (with the WROOM-32 module) plus a bare
-**64×64 HUB75** matrix, or any equivalent.  Detailed wiring is in
+**64×64 HUB75** matrix, or any equivalent. Detailed wiring is in
 [`GUIDE.md`](GUIDE.md#5-signal-wiring-matches-the-firmware-defaults) but
 the short version is:
 
 | HUB75 | GPIO | HUB75 | GPIO |
-|-------|------|-------|------|
+| ----- | ---- | ----- | ---- |
 | R1    | 16   | A     | 15   |
 | G1    | 4    | B     | 13   |
 | B1    | 17   | C     | 12   |
@@ -52,7 +56,7 @@ the short version is:
 | B2    | 19   | LAT   | 26   |
 | CLK   | 27   | OE    | 25   |
 
-Power: 5 V / 4 A bench supply shared with the ESP32's GND.  **Do not
+Power: 5 V / 4 A bench supply shared with the ESP32's GND. **Do not
 power the matrix from USB.**
 
 ## Build & flash
@@ -89,4 +93,4 @@ cargo test -p pong-wars-core        # game-logic tests only
 
 ## License
 
-MIT.  Original game by [Koen van Gilst](https://github.com/vnglst/pong-wars).
+MIT. Original game by [Koen van Gilst](https://github.com/vnglst/pong-wars).
