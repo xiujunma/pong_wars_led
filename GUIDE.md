@@ -107,10 +107,19 @@ The score is shown in the title bar: `Pong Wars — day 512 / night 512 — 1×`
 |-----------------------------------------------|------------------------------------|
 | **ESP32-DevKitC-1** (or any original ESP32 board) | WROOM-32 module, Xtensa LX6, 240 MHz, 320 KB SRAM, **no PSRAM** |
 | **64×64 HUB75 RGB LED matrix, 1/32 scan**     | Must have 5 address lines (A–E). 1/16-scan panels won't work without code changes |
-| **5 V power supply, 4 A minimum**             | MeanWell LRS-50-5 / S-40-5 / GST60A05, or any 5V/4A laptop-style brick. **Do not power from USB.** |
 | 16-conductor 2.54 mm IDC ribbon cable         | Usually shipped with the panel     |
 | Jumper wires (M-F)                            | If you don't have an IDC breakout — ~14 wires |
-| Chunky wires for +5V/GND to the panel         | 18 AWG or thicker (the panel will pull amps) |
+| **No external PSU**                           | The matrix draws only ~0.1 A at 5 V, so power it straight from the ESP32-DevKitC-1's `5V` pin (which is fed from USB). See §6 for details and the optional external-PSU upgrade path. |
+
+### Why 1/32 scan matters
+
+64-row panels have 32 unique address values × 2 halves driven in parallel.
+That requires five address lines: A (addr0), B (addr1), C (addr2), D (addr3),
+**E (addr4)**. Older or smaller (32-row) panels have only A–D — they're
+**1/16 scan**, and the code as written drives an E line they don't have.
+Always check the panel datasheet or silkscreen.
+
+
 
 ### Why 1/32 scan matters
 
@@ -206,57 +215,87 @@ map to minimise "works on the dev board, fails on yours" risk.
 
 ## 6. Power wiring
 
-**This is what trips people up.** The matrix has **two thick screw
-terminals or spade lugs** marked `+5V` and `GND` — completely separate from
-the IDC signal connector.
+**Good news: with this project, you don't need an external PSU.** The
+matrix draws only **~0.1 A at 5 V** under normal game-play load
+(average of mostly-dark panel with a couple of bouncing dots), so
+the ESP32-DevKitC-1's `5V` pin — which is fed directly from the
+USB's 5 V rail when the board is plugged in — has more than enough
+headroom (USB 2.0 supplies 500 mA, the matrix takes 100 mA).
+
+The matrix has **two screw terminals or spade lugs** marked `+5V` and
+`GND` — completely separate from the IDC signal connector.
 
 ```
    ┌─────────────────────────────────────────────┐
-   │   5V PSU      +───────────► matrix  +5V     │
-   │              −───┬───────► matrix  GND     │
-   │                  │                          │
-   │                  └───────► ESP32 GND       │  ← all three grounds tied
+   │  ESP32-DevKitC-1  +5V (USB) ──► matrix  +5V │
+   │                 GND ─────┬─► matrix  GND    │
+   │                         │                   │
+   │   USB cable from computer ┘                  │
+   │   (powers chip AND matrix; 0.1 A total)    │
    └─────────────────────────────────────────────┘
-
-       USB cable from your computer → ESP32
-       (only powers the chip + flashes; never the matrix)
 ```
 
-### Three rules, in order of how often they get violated
+### Two wires, that's it
 
-1. **The matrix's +5V comes from the PSU, never from the dev board's 5V or
-   3V3 pin.** The dev board's regulator will brown out and your panel will
-   flicker or stay dark.
-2. **PSU ground, panel ground, AND ESP32 ground must all be connected.**
-   If the ESP32's ground floats relative to the panel's ground, the signal
-   logic levels are meaningless and you get a garbled or dead display.
-3. **Don't power the ESP32 from the 5V PSU unless you know it's clean.**
-   Just keep using USB for the dev board — USB and the 5V PSU coexist as
-   long as the grounds are tied.
+1. **Jumper from the ESP32's `5V` pin to the matrix's `+5V` terminal.**
+   A standard M-F jumper is fine — we're moving 100 mA, not 4 A.
+2. **Jumper from any ESP32 `GND` pin to the matrix's `GND` terminal.**
+   This is non-negotiable. Without a common ground, the matrix's
+   signal logic levels float relative to the ESP32's and the display
+   shows garbage (or nothing).
 
-### Sanity-sizing the PSU
+That's it. Plug USB into the ESP32 and the whole thing powers up.
 
-Full-white on a 64×64 panel can draw **3.5–4 A at 5 V** (~18–20 W).
+### When you'd want an external PSU (optional)
 
-| PSU rating         | What happens                                |
-|--------------------|---------------------------------------------|
-| 1 A wall wart      | Fails outright; PSU shuts down or melts     |
-| 2 A phone charger  | Brown-outs; flicker; weird colors           |
-| **4 A / 5 A 5V brick** | **Recommended**                          |
-| 10 A bench supply  | Fine, just overkill for one panel           |
+The 0.1 A figure is the average for a real game. The **peak** draw on
+a 64×64 RGB panel at full white can still hit **1.5–4 A** depending on
+the panel's brightness setting and BCM duty cycle. If you want a
+brighter display than what USB can supply, or if you have a
+high-brightness / "P10 outdoor" panel, you'd want an external 5 V PSU:
+
+```
+   ┌─────────────────────────────────────────────┐
+   │  Bench PSU 5V   +──────► matrix  +5V        │
+   │               −──┬───► matrix  GND          │
+   │                  └────► ESP32 GND           │  ← all three grounds tied
+   │                                              │
+   │   USB → ESP32 (still powers the chip)         │
+   └─────────────────────────────────────────────┘
+```
+
+The PSU should be sized to your panel's worst-case draw. As a rule of
+thumb, **2 A per 64×64 panel** is safe for indoor-grade matrices;
+4 A for outdoor-grade. A MeanWell LRS-35-5 (5 V / 7 A) is the
+standard choice.
+
+If you go this route, the rule is: **tie the grounds, keep the
+`+5V` sources separate** (don't connect the PSU's `+5V` to the
+ESP32's `5V` pin — that would let the panel's 1–4 A back-feed into
+the ESP32's USB rail).
+
+### Sanity check (no matter how you powered it)
+
+1. With everything connected, plug in USB to the ESP32.  The board's
+   red power LED should be on.
+2. The matrix should stay dark (or show static noise from a
+   uninitialised shift register) — no clock signal yet.
+3. After flashing the firmware (`cargo run --release -p
+   pong-wars-firmware`), the matrix should start displaying the
+   boot-time test pattern or the Pong Wars game within ~1 second.
 
 ---
 
 ## 7. Connection order
 
-1. **Wire everything with everything OFF.** No USB, no PSU.
-2. **Double-check the +5V and GND terminals on the panel** — reversing
-   those will damage the panel. Verify with a multimeter against the
-   silkscreen.
-3. **Plug in the 5V PSU first.** The panel should stay dark or show garbage
-   from whatever was in its shift registers — both are fine.
-4. **Plug in USB to the ESP32.** The board boots normally.
-5. **Flash:**
+1. **Wire everything with the USB cable unplugged.** No power on.
+2. **Double-check the +5V and GND jumpers** — `+5V` to the matrix's
+   `+5V` terminal, `GND` to `GND`. Reversing these will damage the
+   panel; verify with a multimeter against the silkscreen.
+3. **Plug USB into the ESP32.** The board's red power LED should be
+   on, and the matrix should stay dark or show static noise from a
+   uninitialised shift register — both are fine.
+4. **Flash:**
    ```bash
    cargo run --release -p pong-wars-firmware
    ```
@@ -438,7 +477,7 @@ In rough order of likelihood:
 | Top half OK, bottom half wrong/dark | R2/G2/B2 wires swapped or one is missing |
 | Image is split horizontally with wrong rows | E (addr4) not connected — your panel is 1/32 scan and needs all five address lines |
 | Image is geometrically scrambled but moving | One of the address lines (A–E) miswired or floating |
-| Image visible but very dim or flickery | PSU undersized; or GND between PSU/panel/ESP32 not all tied together |
+| Image visible but very dim or flickery | Your panel may draw more than the USB rail can supply (e.g. a higher-brightness panel or full-white scenes). Add an external 5 V PSU as described in §6. Also check that GND is tied between the board and the panel. |
 | Whole image is shifted by N pixels and wrapping | Wrong `COLS` in `firmware/src/main.rs` (should be 64) |
 | Top and bottom halves swapped | R1↔R2, G1↔G2, B1↔B2 all swapped — re-check IDC pin numbering |
 | Colors wrong (red shows as green, etc.) | R/G/B swapped on one half — re-check pins 1/2/3 or 5/6/7 |
@@ -456,7 +495,9 @@ an ESP32-S3 dev board with the HUB75 IDC connector and a barrel-jack power
 input *built in*. Using one massively simplifies wiring:
 
 1. Plug the panel's IDC into the Matrix Portal's HUB75 socket.
-2. Plug a 5V/4A barrel-jack PSU into the Matrix Portal's power input.
+2. Plug a 5V PSU into the Matrix Portal's barrel-jack input (the
+   Portal routes this to the matrix's `+5V` screw terminal internally;
+   pick a 5V/2A supply for indoor panels, 5V/4A for outdoor-grade).
 3. Plug USB into the Matrix Portal for flashing.
 
 **You must remap the GPIOs** — the Matrix Portal uses different pins than

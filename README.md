@@ -54,8 +54,11 @@ the short version is:
 | B2    | 19   | LAT   | 26   |
 | CLK   | 27   | OE    | 25   |
 
-Power: 5 V / 4 A bench supply shared with the ESP32's GND. **Do not
-power the matrix from USB.**
+Power: the matrix draws only ~0.1 A at 5 V, so you can power it straight
+from the ESP32-DevKitC-1's `5V` pin (which is fed from USB). **No
+external PSU needed.** If your panel is a higher-brightness model or
+you plan to push it to full white, see "External PSU (optional)" in
+the guide.
 
 ## Build & flash
 
