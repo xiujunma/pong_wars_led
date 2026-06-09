@@ -4,9 +4,7 @@
 original, Xtensa LX6) driving a **64×64 HUB75 LED matrix**, written
 entirely in Rust.
 
-<p align="center">
-  <video src="docs/demo.mp4" autoplay loop muted playsinline width="480"></video>
-</p>
+![Pong Wars running on the ESP32 + 64x64 HUB75 panel](docs/demo.gif)
 
 Two balls — one "day", one "night" — bounce around a 32×32 logical grid,
 flipping cells to their own team's color whenever they touch an enemy cell
