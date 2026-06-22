@@ -16,5 +16,5 @@
 pub mod color;
 pub mod game;
 
-pub use color::{Palette, Team, TEAM_DAY, TEAM_NIGHT};
+pub use color::{Palette, Team};
 pub use game::{Ball, PongWars, Vec2, GRID_SIZE, PIXEL_SIZE, SQUARE_SIZE_F};

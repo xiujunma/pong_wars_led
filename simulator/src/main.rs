@@ -48,11 +48,17 @@ const WINDOW_H: usize = PIXEL_SIZE * LED_SIZE;
 /// as "LED that's off but visible" rather than the void.
 const BACKGROUND: u32 = 0xFF_08_08_08;
 
+// Compile-time check that the title-bar strings below match the panel
+// resolution.  If `PIXEL_SIZE` ever changes, both update sites need to
+// be revisited and this will flag a mismatch.
+const _: () = assert!(PIXEL_SIZE == 64, "update both WINDOW_TITLE strings below");
+const WINDOW_TITLE: &str = "Pong Wars — 64×64 LED simulator";
+
 // ---- main loop ------------------------------------------------------------
 
 fn main() {
     let mut window = Window::new(
-        "Pong Wars — 64×64 LED simulator",
+        WINDOW_TITLE,
         WINDOW_W,
         WINDOW_H,
         WindowOptions {

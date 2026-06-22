@@ -1,8 +1,9 @@
-# ESP32-S3 is Xtensa (LX7), so it needs Espressif's fork of rustc + LLVM.
-# Install once with `cargo install espup --locked && espup install`, then
-# source `~/export-esp.sh` (or `%USERPROFILE%\export-esp.bat` on Windows).
+# The original ESP32 is Xtensa (LX6), so it needs Espressif's fork of rustc +
+# LLVM.  Install once with `cargo install espup --locked && espup install`,
+# then source `~/export-esp.sh` (or `%USERPROFILE%\export-esp.bat` on
+# Windows).
 #
-# The `esp` channel ships its own rustc plus the `xtensa-esp32s3-none-elf`
+# The `esp` channel ships its own rustc plus the `xtensa-esp32-none-elf`
 # target so no `rustup target add` is needed.
 [toolchain]
 channel = "esp"

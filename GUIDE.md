@@ -155,7 +155,7 @@ Looking at the back of the panel with the keying notch on top:
 
 On **1/32-scan** panels (anything 64-row or taller), the pin that's GND on
 shorter panels becomes the **E address line** (pin 8). The firmware's
-default pinout assumes this — `addr4 → GPIO 3` wires to that pin. If your
+default pinout assumes this — `addr4 → GPIO 2` wires to that pin. If your
 panel is 1/16 scan (32 rows or less), it has no E line and the project
 won't drive it without code changes.
 

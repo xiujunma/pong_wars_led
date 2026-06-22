@@ -40,11 +40,6 @@ pub enum Team {
     Night = 1,
 }
 
-/// Convenience constant for the day team — handy in tests and pattern arms.
-pub const TEAM_DAY: Team = Team::Day;
-/// Convenience constant for the night team.
-pub const TEAM_NIGHT: Team = Team::Night;
-
 impl Team {
     /// The opposing team.
     #[inline]

@@ -26,7 +26,7 @@ use core::f32::consts::PI;
 use libm::{cosf, fabsf, floorf, sinf};
 use oorandom::Rand32;
 
-use crate::color::{Team, TEAM_DAY, TEAM_NIGHT};
+use crate::color::Team;
 
 /// Number of pixels along one side of the LED matrix.
 pub const PIXEL_SIZE: usize = 64;
@@ -112,13 +112,13 @@ impl PongWars {
     /// velocities are fixed so two engines started with the same seed will
     /// trace identical histories.
     pub fn new(seed: u64) -> Self {
-        let mut cells = [TEAM_DAY; GRID_SIZE * GRID_SIZE];
+        let mut cells = [Team::Day; GRID_SIZE * GRID_SIZE];
         // Left half day, right half night — matches the WASM port's seed
         // pattern (it filled column-wise, but on a square grid the result is
         // identical: a vertical split).
         for y in 0..GRID_SIZE {
             for x in (GRID_SIZE / 2)..GRID_SIZE {
-                cells[y * GRID_SIZE + x] = TEAM_NIGHT;
+                cells[y * GRID_SIZE + x] = Team::Night;
             }
         }
 
@@ -133,12 +133,12 @@ impl PongWars {
             Ball {
                 pos: Vec2::new(quarter, half),
                 vel: Vec2::new(init_speed, -init_speed),
-                team: TEAM_DAY,
+                team: Team::Day,
             },
             Ball {
                 pos: Vec2::new(quarter * 3.0, half),
                 vel: Vec2::new(-init_speed, init_speed),
-                team: TEAM_NIGHT,
+                team: Team::Night,
             },
         ];
 
@@ -266,11 +266,16 @@ impl PongWars {
         ball.vel.x = clamp(ball.vel.x + jitter_x, -MAX_SPEED, MAX_SPEED);
         ball.vel.y = clamp(ball.vel.y + jitter_y, -MAX_SPEED, MAX_SPEED);
 
+        // Floor at `MIN_SPEED` while preserving the ball's sign.  We can't
+        // use `libm::copysignf` because per IEEE 754 it always returns
+        // `+MIN_SPEED` when the input is `+0.0`/`-0.0` (sign of zero, not
+        // value of zero), which would lose the ball's direction.  The
+        // explicit `if/else` below is bit-exact for every f32 input.
         if fabsf(ball.vel.x) < MIN_SPEED {
-            ball.vel.x = libm::copysignf(MIN_SPEED, ball.vel.x);
+            ball.vel.x = if ball.vel.x < 0.0 { -MIN_SPEED } else { MIN_SPEED };
         }
         if fabsf(ball.vel.y) < MIN_SPEED {
-            ball.vel.y = libm::copysignf(MIN_SPEED, ball.vel.y);
+            ball.vel.y = if ball.vel.y < 0.0 { -MIN_SPEED } else { MIN_SPEED };
         }
     }
 }

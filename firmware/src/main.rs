@@ -170,11 +170,18 @@ fn main() -> ! {
             // collisions; balls move; jitter is applied to the velocities.
             game.tick();
 
-            // Re-render the new game state into the framebuffer.  We
-            // only need to redraw on a tick, not on every frame.
-            draw_frame(&mut fb, &game);
+            // Cells only change on a tick, so repaint them only then.
+            // The inter-tick frames leave the cells alone and just push
+            // the same buffer to the panel.
+            draw_cells(&mut fb, &game);
         }
         frame_count = frame_count.wrapping_add(1);
+
+        // The balls are drawn on every frame, so the ball motion looks
+        // smooth at the DMA refresh rate (the ball position is f32 and
+        // the per-tick step is sub-pixel, so painting the ball on every
+        // frame interpolates between cell updates).
+        draw_balls(&mut fb, &game);
 
         // Hand the framebuffer to DMA and block until the transfer is done.
         // `xfer.wait()` consumes the driver and returns it back so we can
@@ -210,7 +217,7 @@ fn to_eg(c: pong_wars_core::color::Rgb565) -> Rgb888 {
     )
 }
 
-/// Paint one frame into the framebuffer.
+/// Paint one frame's cell blocks into the framebuffer.
 ///
 /// We bypass the embedded-graphics `Rectangle`/`Circle` primitives
 /// entirely and drive the framebuffer's `DrawTarget` API directly with
@@ -219,7 +226,7 @@ fn to_eg(c: pong_wars_core::color::Rgb565) -> Rgb888 {
 /// their impl, which doesn't match our `Rgb565` framebuffer — using the
 /// lower-level `DrawTarget` methods sidesteps that and is also a few
 /// percent faster (no per-cell primitive bookkeeping).
-fn draw_frame(fb: &mut FrameBuffer, game: &PongWars) {
+fn draw_cells(fb: &mut FrameBuffer, game: &PongWars) {
     let palette = pong_wars_core::Palette::classic();
 
     // Cells.  Each cell paints a `SQUARE_SIZE`×`SQUARE_SIZE` block.  A full
@@ -239,10 +246,13 @@ fn draw_frame(fb: &mut FrameBuffer, game: &PongWars) {
             fb.fill_solid(&area, color).ok();
         }
     }
+}
 
-    // Balls.  Drawn last so they always appear on top of the freshly
-    // painted cells.  Each ball is a small filled circle of radius
-    // `Ball::RADIUS`.
+/// Paint the two balls on top of whatever cell colors are already in the
+/// framebuffer.  Called every render frame so the ball motion interpolates
+/// between simulation ticks.
+fn draw_balls(fb: &mut FrameBuffer, game: &PongWars) {
+    let palette = pong_wars_core::Palette::classic();
     for ball in game.balls() {
         draw_ball(fb, ball, to_eg(palette.ball_color(ball.team)));
     }
