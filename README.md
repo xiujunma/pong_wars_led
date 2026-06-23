@@ -14,7 +14,7 @@ original HTML5 canvas demo), with arithmetic switched from `f64` to `f32`
 and the heap-allocated grid replaced by a stack-allocated fixed array so
 it fits comfortably in the chip's ~320 KB SRAM.
 
-[wasm-port]: https://github.com/wasmhub-dev/tree/main/pong_wars.rs
+[wasm-port]: https://github.com/wasmhub-dev/pong_wars.rs
 
 ## Quick preview (no hardware)
 
